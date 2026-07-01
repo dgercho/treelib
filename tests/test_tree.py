@@ -486,6 +486,21 @@ class TreeCase(unittest.TestCase):
         self.tree.to_json()
         self.tree.to_json(True)
 
+    def test_from_json(self):
+        t = Tree()
+        t.create_node("Root", "Root")
+        t.create_node("Child1", "Child1", parent="Root")
+        t.create_node("Child2", "Child2", parent="Root")
+        t.create_node("Grandchild", "Grandchild", parent="Child1", data={"val": 42})
+
+        restored = Tree.from_json(t.to_json(with_data=True))
+
+        self.assertEqual(restored.size(), t.size())
+        self.assertEqual(restored.root, "Root")
+        self.assertEqual({c.identifier for c in restored.children("Root")}, {"Child1", "Child2"})
+        self.assertEqual(restored.parent("Grandchild").identifier, "Child1")
+        self.assertEqual(restored["Grandchild"].data, {"val": 42})
+
     def test_siblings(self):
         self.assertEqual(len(self.tree.siblings("hárry")) == 0, True)
         self.assertEqual(self.tree.siblings("jane")[0].identifier == "bill", True)
