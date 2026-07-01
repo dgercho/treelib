@@ -246,13 +246,15 @@ class Tree(object):
         json_parsed = json.loads(raw)
 
         def _append_node(subtree, parent_id=None):
+            if isinstance(subtree, str):
+                tree.create_node(tag=subtree, identifier=subtree, parent=parent_id)
+                return
             for tag, node_info in subtree.items():
-                node_id = node_info["id"]
                 node_data = node_info.get("data")
-                tree.create_node(tag=tag, identifier=node_id, parent=parent_id, data=node_data)
+                tree.create_node(tag=tag, identifier=tag, parent=parent_id, data=node_data)
 
                 for child in node_info.get("children", []):
-                    _append_node(child, parent_id=node_id)
+                    _append_node(child, parent_id=tag)
 
         _append_node(json_parsed)
         return tree
@@ -1980,7 +1982,7 @@ class Tree(object):
 
         nid = self.root if (nid is None) else nid
         ntag = self[nid].tag
-        tree_dict = {ntag: {"id": nid, "children": []}}
+        tree_dict = {ntag: {"children": []}}
 
         if with_data:
             tree_dict[ntag]["data"] = self[nid].data
@@ -1996,7 +1998,7 @@ class Tree(object):
                     self.to_dict(elem.identifier, with_data=with_data, sort=sort, reverse=reverse)
                 )
             if len(tree_dict[ntag]["children"]) == 0:
-                tree_dict = {ntag: {"id": nid}} if not with_data else {ntag: {"id": nid, "data": self[nid].data}}
+                tree_dict = self[nid].tag if not with_data else {ntag: {"data": self[nid].data}}
 
             return tree_dict
 
