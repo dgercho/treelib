@@ -237,6 +237,28 @@ class Tree(object):
                 if tree.identifier != self._identifier:
                     new_node.clone_pointers(tree.identifier, self._identifier)
 
+    @classmethod
+    def from_json(cls, raw: Union[str, bytes, bytearray]):
+        """
+        Load tree from exported JSON.
+        """
+        tree = cls()
+        json_parsed = json.loads(raw)
+
+        def _append_node(subtree, parent_id=None):
+            if isinstance(subtree, str):
+                tree.create_node(tag=subtree, identifier=subtree, parent=parent_id)
+                return
+            for tag, node_info in subtree.items():
+                node_data = node_info.get("data")
+                tree.create_node(tag=tag, identifier=tag, parent=parent_id, data=node_data)
+
+                for child in node_info.get("children", []):
+                    _append_node(child, parent_id=tag)
+
+        _append_node(json_parsed)
+        return tree
+
     def _clone(
         self,
         identifier: Optional[str] = None,
